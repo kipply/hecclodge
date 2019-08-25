@@ -32,23 +32,22 @@ function create ()
 }
 
 //assume the song notation is well-formed
-function ingestNotes (intervalSize, noteArray, songLength) {
-    let validChars = 'abcdefghijklmnopqrstuvwxyz';
-    let noteMaps = {};
-    for (let i = 0; i < songLength / intervalSize; i++) {
-        noteMaps[i] = {};
-        for (let c = 0; c < validChars.length; c++) {
-            noteMaps[i][validChars.charAt(c)] = 0;
+//ignore song lengths for now, just assume we're trying to hit within buffer zone
+//return the current note to change as needed
+function getCurChars(curTime, noteArray, curNote, charCounters) {
+    let bufferTime = 0; //change if current changes
+    let validChars = 'abcd';
+    let curStart = noteArray[curNote]['timestart'];
+    for (let i = 0; i < validChars.length; i++) {
+        if (charCounters[validChars.charAt(i)] > 0) {
+            charCounters[validChars.charAt(i)] -= 1;
         }
     }
-    for (let note = 0; note < noteArray.length; note++) {
-        let start = Math.ceil(noteArray[note]['timestamp']/intervalSize) * intervalSize;
-        let end = Math.floor((noteArray[note]['timestamp'] + noteArray[note]['time']) / intervalSize) * intervalSize;
-        for (let time = start; time < end; time += intervalSize) {
-            noteMaps[time/intervalSize][noteArray[note]['char']] = 1;
-        }
+    if (curTime > curStart + bufferTime) {
+        charCounters[noteArray[curNote]['char']] = bufferTime;
+        curNote += 1;
     }
-    return noteMaps;
+    return curNote;
 }
 
 function update ()
@@ -74,5 +73,6 @@ function update ()
     }
 
     output.push('The current state: ' + JSON.stringify(sampleSong[parseInt(timerEvents[0].getProgress() * 5)]) );
+    output.push('The current char counter: ' + JSON.stringify(sampleSong[parseInt(timerEvents[0].getProgress() * 5)]) );
     text.setText(output);
 }
