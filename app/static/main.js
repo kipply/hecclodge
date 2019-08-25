@@ -1,49 +1,30 @@
 var config = {
-    type: Phaser.CANVAS,
+    type: Phaser.AUTO,
     width: 800,
     height: 600,
-    backgroundColor: '#2d2d2d',
-    parent: 'phaser-example',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 200 }
+        }
+    },
     scene: {
-        create: create,
-        update: update
+        preload: preload,
+        create: create
     }
 };
-
-var text;
-var graphics;
-var hsv;
-var timerEvents = [];
-
 var game = new Phaser.Game(config);
-
-function create ()
-{
-    text = this.add.text(32, 32);
-
-    for (var i = 0; i < 32; i++)
-    {
-        timerEvents.push(this.time.addEvent({ delay: Phaser.Math.Between(1000, 8000), loop: true }));
-    }
-
-    hsv = Phaser.Display.Color.HSVColorWheel();
-
-    graphics = this.add.graphics({ x: 240, y: 36 });
+function preload() {
+    this.load.image('background', 'static/background.jpeg');
 }
 
-function update ()
-{
-    var output = [];
+function create() {
+    this.add.image(400, 300, 'background');
 
-    graphics.clear();
-
-    for (var i = 0; i < timerEvents.length; i++)
-    {
-        output.push('Event.progress: ' + timerEvents[i].getProgress().toString().substr(0, 4));
-
-        graphics.fillStyle(hsv[i * 8].color, 1);
-        graphics.fillRect(0, i * 16, 500 * timerEvents[i].getProgress(), 8);
+    for (var i = 0; i < 30; i++) {
+        var bullet = this.physics.add.image(400, 100, 'logo');
+        bullet.setVelocity(Math.random() * 100, Math.random() * 100);
+        bullet.setBounce(1, 1);
+        bullet.setCollideWorldBounds(true);
     }
-
-    text.setText(output);
 }
