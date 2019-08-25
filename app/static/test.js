@@ -6,7 +6,7 @@ notation  = [
     {'char':'a', 'timestamp':5}, 
 ]
 
-function readNotes(notes) {
+function readNotes(curTime, notes) {
     let timeDiff = 10;
     let curStart = 0, curEnd = 0;
     let validChars = 'abcd';
