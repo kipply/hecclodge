@@ -31,8 +31,36 @@ function create ()
     graphics = this.add.graphics({ x: 240, y: 36 });
 }
 
+//assume the song notation is well-formed
+function ingestNotes (intervalSize, noteArray, songLength) {
+    let validChars = 'abcdefghijklmnopqrstuvwxyz';
+    let noteMaps = {};
+    for (let i = 0; i < songLength / intervalSize; i++) {
+        noteMaps[i] = {};
+        for (let c = 0; c < validChars.length; c++) {
+            noteMaps[i][validChars.charAt(c)] = 0;
+        }
+    }
+    for (let note = 0; note < noteArray.length; note++) {
+        let start = Math.ceil(noteArray[note]['timestamp']/intervalSize) * intervalSize;
+        let end = Math.floor((noteArray[note]['timestamp'] + noteArray[note]['time']) / intervalSize) * intervalSize;
+        for (let time = start; time < end; time += intervalSize) {
+            noteMaps[time/intervalSize][noteArray[note]['char']] = 1;
+        }
+    }
+    return noteMaps;
+}
+
 function update ()
 {
+    var sampleSong = {
+        0: {'a': 0, 'b': 0},
+        1: {'a': 0, 'b': 1},
+        2: {'a': 1, 'b': 1},
+        3: {'a': 1, 'b': 0},
+        4: {'a': 0, 'b': 0},
+    };
+    
     var output = [];
 
     graphics.clear();
@@ -45,5 +73,6 @@ function update ()
         graphics.fillRect(0, i * 16, 500 * timerEvents[i].getProgress(), 8);
     }
 
+    output.push('The current state: ' + JSON.stringify(sampleSong[parseInt(timerEvents[0].getProgress() * 5)]) );
     text.setText(output);
 }
