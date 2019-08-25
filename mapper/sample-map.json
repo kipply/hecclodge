@@ -1,0 +1,18 @@
+{
+	"title": "Blank Space",
+	"artist": "t swizzle",
+	"duration": 3133421,
+	"difficulty": 4,
+	"data": [
+		{
+			"char": "I",
+			"timestamp": 1342,
+			"type": "CLICK"
+		},
+		{
+			"char": "I",
+			"timestamp": 50342,
+			"type": "RELEASE"
+		}
+	]
+}
