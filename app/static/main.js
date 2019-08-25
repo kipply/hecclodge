@@ -20,7 +20,6 @@ function preload() {
 
 function create() {
     this.add.image(400, 300, 'background');
-
     for (var i = 0; i < 30; i++) {
         var bullet = this.physics.add.image(400, 100, 'logo');
         bullet.setVelocity(Math.random() * 100, Math.random() * 100);
@@ -28,3 +27,4 @@ function create() {
         bullet.setCollideWorldBounds(true);
     }
 }
+function update () {}
