@@ -31,43 +31,42 @@ var score = 0;
 var scoreText;
 
 var Bullet = new Phaser.Class({
+  Extends: Phaser.GameObjects.Image,
 
-    Extends: Phaser.GameObjects.Image,
+  initialize:
 
-    initialize:
+  // Bullet Constructor
+  function Bullet (scene) {
+    Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
+    this.speed = 1;
+    this.direction = 0;
+    this.xSpeed = 0;
+    this.ySpeed = 0;
+    this.setSize(12, 12, true);
+    this.scene = scene
+  },
 
-    // Bullet Constructor
-    function Bullet (scene) {
-        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-        this.speed = 1;
-        this.direction = 0;
-        this.xSpeed = 0;
-        this.ySpeed = 0;
-        this.setSize(12, 12, true);
-        this.scene = scene
-    },
+  // Fires a bullet from the player to the reticle
+  fire: function (shooter) {
+    this.setPosition(shooter.x, shooter.y); // Initial position
+    this.direction = Math.PI/2 - shooter.rotation;
 
-    // Fires a bullet from the player to the reticle
-    fire: function (shooter) {
-        this.setPosition(shooter.x, shooter.y); // Initial position
-        this.direction = Math.PI/2 - shooter.rotation;
+    // Calculate X and y velocity of bullet to moves it from shooter to target
+    this.xSpeed = this.speed*Math.sin(this.direction);
+    this.ySpeed = this.speed*Math.cos(this.direction);
+    this.rotation = shooter.rotation; // angle bullet with shooters rotation
+  },
 
-        // Calculate X and y velocity of bullet to moves it from shooter to target
-        this.xSpeed = this.speed*Math.sin(this.direction);
-        this.ySpeed = this.speed*Math.cos(this.direction);
-        this.rotation = shooter.rotation; // angle bullet with shooters rotation
-    },
+  // Updates the position of the bullet each cycle
+  update: function (time, delta) {
+    this.x += this.xSpeed * delta;
+    this.y += this.ySpeed * delta;
 
-    // Updates the position of the bullet each cycle
-    update: function (time, delta) {
-      this.x += this.xSpeed * delta;
-      this.y += this.ySpeed * delta;
-
-      const bounds = this.scene.physics.world.bounds;
-      if (this.x < bounds.x || this.y < bounds.y || this.x > bounds.x + bounds.width || this.y > bounds.y + bounds.height){
-        this.destroy();
-      }
+    const bounds = this.scene.physics.world.bounds;
+    if (this.x < bounds.x || this.y < bounds.y || this.x > bounds.x + bounds.width || this.y > bounds.y + bounds.height){
+      this.destroy();
     }
+  }
 });
 
 function preload () {
