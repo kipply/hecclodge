@@ -16,7 +16,6 @@ var config = {
     update: update,
     extend: {
       player: null,
-      reticle: null,
       moveKeys: null,
       bullets: null,
       time: 0,
@@ -46,7 +45,6 @@ function create () {
   // Add background, player, and reticle sprites
   var background = this.add.image(800, 600, 'background');
   player = this.physics.add.sprite(800, 600, 'player_handgun');
-  reticle = this.physics.add.sprite(800, 700, 'target');
 
   //add score text
   scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
@@ -55,7 +53,6 @@ function create () {
   // Set image/sprite properties
   background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
   player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
-  reticle.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
 
   // Set camera zoom
   this.cameras.main.zoom = 0.5;
@@ -65,7 +62,9 @@ function create () {
     'up': Phaser.Input.Keyboard.KeyCodes.W,
     'down': Phaser.Input.Keyboard.KeyCodes.S,
     'left': Phaser.Input.Keyboard.KeyCodes.A,
-    'right': Phaser.Input.Keyboard.KeyCodes.D
+    'right': Phaser.Input.Keyboard.KeyCodes.D,
+    'rotate_left': Phaser.Input.Keyboard.KeyCodes.R,
+    'rotate_right': Phaser.Input.Keyboard.KeyCodes.L,
   });
 
   // Enables movement of player with WASD keys
@@ -81,6 +80,13 @@ function create () {
   this.input.keyboard.on('keydown_D', function (event) {
     player.setAccelerationX(800);
   });
+  this.input.keyboard.on('keydown_L', function (event) {
+    player.setAngularAcceleration(400);
+  });
+  this.input.keyboard.on('keydown_R', function (event) {
+    player.setAngularAcceleration(-400);
+  });
+
 
   // Stops player acceleration on uppress of WASD keys
   this.input.keyboard.on('keyup_W', function (event) {
@@ -99,6 +105,17 @@ function create () {
     if (moveKeys['left'].isUp)
       player.setAccelerationX(0);
   });
+  this.input.keyboard.on('keyup_L', function (event) {
+    if (moveKeys['rotate_left'].isUp)
+      player.setAngularAcceleration(0);
+      player.setAngularVelocity(0);
+  });
+  this.input.keyboard.on('keyup_R', function (event) {
+    if (moveKeys['rotate_left'].isUp)
+      player.setAngularAcceleration(0);
+      player.setAngularVelocity(0);
+  });
+
 
   // Locks pointer on mousedown
   game.canvas.addEventListener('mousedown', function () {
@@ -110,15 +127,6 @@ function create () {
     if (game.input.mouse.locked)
       game.input.mouse.releasePointerLock();
   }, 0, this);
-
-  // Move reticle upon locked pointer move
-  this.input.on('pointermove', function (pointer) {
-    if (this.input.mouse.locked) {
-      reticle.x += pointer.movementX;
-      reticle.y += pointer.movementY;
-    }
-  }, this);
-
 }
 
 function destroyBullet(player, bullet) { //destroys bullet
@@ -154,24 +162,6 @@ function constrainVelocity(sprite, maxVelocity) {
   }
 }
 
-// Ensures reticle does not move offscreen relative to player
-function constrainReticle(reticle) {
-  var distX = reticle.x-player.x; // X distance between player & reticle
-  var distY = reticle.y-player.y; // Y distance between player & reticle
-
-  // Ensures reticle cannot be moved offscreen
-  if (distX > 800)
-    reticle.x = player.x+800;
-  else if (distX < -800)
-    reticle.x = player.x-800;
-
-  if (distY > 600)
-    reticle.y = player.y+600;
-  else if (distY < -600)
-    reticle.y = player.y-600;
-}
-
-
 function update (time, delta) {
   if (time % 100 === 1) { //add bullets flying around
     for (var i = 0; i < 30; i++) {
@@ -194,22 +184,12 @@ function update (time, delta) {
     }
   }
 
-  // Rotates player to face towards reticle
-  player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y);
-
   // Camera follows player ( can be set in create )
   this.cameras.main.startFollow(player);
 
   scoreText.x = player.x - 700;
   scoreText.y = player.y - 550;
 
-  // Makes reticle move with player
-  reticle.body.velocity.x = player.body.velocity.x;
-  reticle.body.velocity.y = player.body.velocity.y;
-
   // Constrain velocity of player
   constrainVelocity(player, 500);
-
-  // Constrain position of reticle
-  constrainReticle(reticle);
 }
