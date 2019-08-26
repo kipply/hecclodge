@@ -39,14 +39,6 @@ function preload ()
 
 function create ()
 {
-    //add bullets flying around
-    for (var i = 0; i < 30; i++) {
-        var bullet = this.physics.add.image(400, 100, 'logo');
-        bullet.setVelocity(Math.random() * 100, Math.random() * 100);
-        bullet.setBounce(1, 1);
-        bullet.setCollideWorldBounds(true);
-    }
-
     // Create world bounds
     this.physics.world.setBounds(0, 0, 1600, 1200);
 
@@ -54,6 +46,16 @@ function create ()
     var background = this.add.image(800, 600, 'background');
     player = this.physics.add.sprite(800, 600, 'player_handgun');
     reticle = this.physics.add.sprite(800, 700, 'target');
+
+    //add bullets flying around
+    for (var i = 0; i < 30; i++) {
+        var bullet = this.physics.add.image(400, 100, 'logo');
+        bullet.setVelocity(Math.random() * 100, Math.random() * 100);
+        bullet.setBounce(1, 1);
+        bullet.setCollideWorldBounds(true);
+        //this.physics.add.collider(player, bullet);
+        this.physics.add.overlap(player, bullet, destroyBullet, null, this);
+    }
 
     // Set image/sprite properties
     background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
@@ -123,6 +125,10 @@ function create ()
         }
     }, this);
 
+}
+
+function destroyBullet(player, bullet) { //destroys bullet
+    bullet.disableBody(true, true);
 }
 
 // Ensures sprite speed doesnt exceed maxVelocity while update is called
