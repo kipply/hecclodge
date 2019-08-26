@@ -38,7 +38,7 @@ var Bullet = new Phaser.Class({
   // Bullet Constructor
   function Bullet (scene) {
     Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-    this.speed = 1;
+    this.speed = 0.2;
     this.direction = 0;
     this.xSpeed = 0;
     this.ySpeed = 0;
@@ -78,7 +78,7 @@ function preload () {
   this.load.image('background', 'static/starfield.png');
   this.load.image('bullet', 'static/bullet72.png');
   this.load.image('powerup', 'static/jets.png');
-  this.load.image('enemy', 'static/melon.png');
+  this.load.image('enemy_bullet', 'static/melon.png');
 }
 
 function create () {
@@ -88,11 +88,13 @@ function create () {
   // Add background, player sprites, and bullets
   var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
   player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player_handgun');
+  enemy = this.physics.add.sprite(100, 100, 'player_handgun');
+  enemy.lastFired = 0;
   playerBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
+  enemyBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
 
   //add score text
   scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
-
 
   // Set image/sprite properties
   background.setOrigin(0.5, 0.5).setDisplaySize(windowWidth*2, windowHeight*2);
@@ -136,7 +138,7 @@ function create () {
           return;
 
       // Get bullet from bullets group
-      var bullet = playerBullets.create(100, 100, 'player_bullet');
+      var bullet = playerBullets.create(300, 300, 'player_bullet');
 
       if (bullet) {
           bullet.fire(player);
@@ -198,6 +200,20 @@ function playerHit(player, enemyBullet) { //this HURTS the player/game over!
   gameOver = true;
 }
 
+function enemyFire(enemy, player, time, gameObject) 
+{
+    if (enemy.active === false) {return;}
+    if ((time - enemy.lastFired) > 1000) {
+        enemy.lastFired = time;
+        var bullet = enemyBullets.get().setActive(true).setVisible(true);
+
+        if (bullet) {
+            bullet.fire(enemy);
+            gameObject.physics.add.collider(player, bullet, playerHit);
+        }
+    }
+}
+
 // Ensures sprite speed doesnt exceed maxVelocity while update is called
 function constrainVelocity(sprite, maxVelocity) {
   if (!sprite || !sprite.body)
@@ -231,15 +247,19 @@ function update (time, delta) {
   }
   if (time % 50 === 2) { //add enemy bullets spawning (to avoid!)
     for (var i = 0; i < 5; i++) {
-      var enemy = this.physics.add.image(100, 400, 'melon');
-      enemy.setVelocity(-Math.random() * 100, -Math.random() * 100);
-      enemy.setBounce(1, 1);
-      enemy.setCollideWorldBounds(true);
-      //this.physics.add.collider(player, enemy);
-      this.physics.add.overlap(player, enemy, playerHit, null, this);
+      var enemyBullet = this.physics.add.image(100, 400, 'enemy_bullet');
+      enemyBullet.setVelocity(-Math.random() * 100, -Math.random() * 100);
+      enemyBullet.setBounce(1, 1);
+      enemyBullet.setCollideWorldBounds(true);
+      //this.physics.add.collider(player, enemyBullet);
+      this.physics.add.overlap(player, enemyBullet, playerHit, null, this);
     }
   }
 
   // Constrain velocity of player
   constrainVelocity(player, 500);
+
+  // Enemy actions
+  enemy.rotation = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
+  enemyFire(enemy, player, time, this);
 }
