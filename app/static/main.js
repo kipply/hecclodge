@@ -43,7 +43,7 @@ function preload () {
 
 function create () {
   // Create world bounds
-  this.physics.world.setBounds(windowWidth/2, windowHeight/2, windowWidth, windowHeight);
+  this.physics.world.setBounds(-windowWidth/2, -windowHeight/2, windowWidth*2, windowHeight*2);
 
   // Add background, player, and reticle sprites
   var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
