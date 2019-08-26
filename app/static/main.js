@@ -1,13 +1,5 @@
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
-document.onload = function() {
-  var context = new AudioContext();
-  document.querySelector('button').addEventListener('click', function() {
-    context.resume().then(() => {
-      console.log('Playback resumed successfully');
-    });
-  });
-}
 
 var config = {
   type: Phaser.AUTO,
@@ -43,7 +35,6 @@ var Bullet = new Phaser.Class({
   Extends: Phaser.GameObjects.Image,
 
   initialize:
-
   // Bullet Constructor
   function Bullet (scene) {
     Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
@@ -52,7 +43,7 @@ var Bullet = new Phaser.Class({
     this.xSpeed = 0;
     this.ySpeed = 0;
     this.setSize(12, 12, true);
-    this.scene = scene
+    this.scene = scene;
   },
 
   // Fires a bullet from the player to the reticle
@@ -68,6 +59,7 @@ var Bullet = new Phaser.Class({
 
   // Updates the position of the bullet each cycle
   update: function (time, delta) {
+    this.body.setImmovable(true);
     this.x += this.xSpeed * delta;
     this.y += this.ySpeed * delta;
 
@@ -80,6 +72,7 @@ var Bullet = new Phaser.Class({
 
 
 function preload () {
+  this.audioContext = new AudioContext();
   // Load in images and sprites
   this.load.spritesheet('player_handgun', 'static/player_handgun.png',
     { frameWidth: 66, frameHeight: 60 }
@@ -101,6 +94,8 @@ function create () {
   // Add background, player sprites, and bullets
   var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
   player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player_handgun');
+  player.setBounce(false);
+  player.setImmovable(true);
   enemy = this.physics.add.sprite(100, 100, 'player_handgun');
   enemy.lastFired = 0;
   playerBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
@@ -193,18 +188,6 @@ function create () {
       player.setAngularAcceleration(0);
       player.setAngularVelocity(0);
   });
-
-
-  // Locks pointer on mousedown
-  game.canvas.addEventListener('mousedown', function () {
-    game.input.mouse.requestPointerLock();
-  });
-
-  // Exit pointer lock when Q or escape (by default) is pressed.
-  this.input.keyboard.on('keydown_Q', function (event) {
-    if (game.input.mouse.locked)
-      game.input.mouse.releasePointerLock();
-  }, 0, this);
 }
 
 function destroyBullet(player, bullet) { //destroys bullet
@@ -219,18 +202,16 @@ function playerHit(player, enemyBullet) { //this HURTS the player/game over!
   gameOver = true;
 }
 
-function enemyFire(enemy, player, time, gameObject)
-{
-    if (enemy.active === false) {return;}
-    if ((time - enemy.lastFired) > 1000) {
-        enemy.lastFired = time;
-        var bullet = enemyBullets.get().setActive(true).setVisible(true);
-
-        if (bullet) {
-            bullet.fire(enemy);
-            gameObject.physics.add.collider(player, bullet, playerHit);
-        }
+function enemyFire(enemy, player, time, gameObject){
+  if (enemy.active === false) {return;}
+  if ((time - enemy.lastFired) > 1000) {
+    enemy.lastFired = time;
+    var bullet = enemyBullets.get().setActive(true).setVisible(true);
+    if (bullet) {
+      bullet.fire(enemy);
+      gameObject.physics.add.collider(player, bullet, playerHit);
     }
+  }
 }
 
 // Ensures sprite speed doesnt exceed maxVelocity while update is called
@@ -253,14 +234,11 @@ function constrainVelocity(sprite, maxVelocity) {
   }
 }
 
-function update (time, delta) {
+function update(time, delta) {
   if (time % 100 === 1) { //add powerups flying around
     for (var i = 0; i < 30; i++) {
       var powerup = this.physics.add.image(400, 100, 'powerup');
       powerup.setVelocity(Math.random() * 100, Math.random() * 100);
-      powerup.setBounce(1, 1);
-      powerup.setCollideWorldBounds(true);
-      //this.physics.add.collider(player, powerup);
       this.physics.add.overlap(player, powerup, destroyBullet, null, this);
     }
   }
@@ -268,9 +246,6 @@ function update (time, delta) {
     for (var i = 0; i < 5; i++) {
       var enemyBullet = this.physics.add.image(100, 400, 'enemy_bullet');
       enemyBullet.setVelocity(-Math.random() * 100, -Math.random() * 100);
-      enemyBullet.setBounce(1, 1);
-      enemyBullet.setCollideWorldBounds(true);
-      //this.physics.add.collider(player, enemyBullet);
       this.physics.add.overlap(player, enemyBullet, playerHit, null, this);
     }
   }
