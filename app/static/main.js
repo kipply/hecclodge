@@ -38,6 +38,7 @@ function preload ()
     this.load.image('target', 'static/ball.png');
     this.load.image('background', 'static/starfield.png');
     this.load.image('bullet', 'static/bullet72.png');
+    this.load.image('enemy', 'static/melon.png');
 }
 
 function create ()
@@ -53,15 +54,6 @@ function create ()
     //add score text
     scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
 
-    //add bullets flying around
-    for (var i = 0; i < 30; i++) {
-        var bullet = this.physics.add.image(400, 100, 'bullet');
-        bullet.setVelocity(Math.random() * 100, Math.random() * 100);
-        bullet.setBounce(1, 1);
-        bullet.setCollideWorldBounds(true);
-        //this.physics.add.collider(player, bullet);
-        this.physics.add.overlap(player, bullet, destroyBullet, null, this);
-    }
     
     // Set image/sprite properties
     background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
@@ -139,6 +131,13 @@ function destroyBullet(player, bullet) { //destroys bullet
     scoreText.setText('Score: ' + score);
 }
 
+function playerHit(player, enemyBullet) { //this HURTS the player/game over!
+    this.physics.pause();
+    player.setTint(0xff0000);
+    player.anims.play('turn');
+    gameOver = true;
+}
+
 // Ensures sprite speed doesnt exceed maxVelocity while update is called
 function constrainVelocity(sprite, maxVelocity)
 {
@@ -178,8 +177,29 @@ function constrainReticle(reticle)
         reticle.y = player.y-600;
 }
 
+
 function update (time, delta)
 {
+    if (time % 100 === 1) { //add bullets flying around
+        for (var i = 0; i < 30; i++) {
+            var bullet = this.physics.add.image(400, 100, 'bullet');
+            bullet.setVelocity(Math.random() * 100, Math.random() * 100);
+            bullet.setBounce(1, 1);
+            bullet.setCollideWorldBounds(true);
+            //this.physics.add.collider(player, bullet);
+            this.physics.add.overlap(player, bullet, destroyBullet, null, this);
+        }
+    }
+    if (time % 50 === 2) { //add enemy bullets spawning (to avoid!)
+        for (var i = 0; i < 5; i++) {
+            var enemy = this.physics.add.image(100, 400, 'melon');
+            enemy.setVelocity(-Math.random() * 100, -Math.random() * 100);
+            enemy.setBounce(1, 1);
+            enemy.setCollideWorldBounds(true);
+            //this.physics.add.collider(player, enemy);
+            this.physics.add.overlap(player, enemy, playerHit, null, this);
+        }
+    }
     // Rotates player to face towards reticle
     player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y);
 
