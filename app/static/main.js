@@ -1,5 +1,9 @@
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
+window.onload = function() {
+  var context = new AudioContext();
+  // Setup all nodes
+}
 
 var config = {
   type: Phaser.AUTO,
@@ -21,14 +25,15 @@ var config = {
       player: null,
       moveKeys: null,
       bullets: null,
-      time: 0,
     }
   }
+
 };
 
 var game = new Phaser.Game(config);
 var score = 0;
 var scoreText;
+var beatLength = 0.71;
 
 var Bullet = new Phaser.Class({
   Extends: Phaser.GameObjects.Image,
@@ -69,6 +74,7 @@ var Bullet = new Phaser.Class({
   }
 });
 
+
 function preload () {
   // Load in images and sprites
   this.load.spritesheet('player_handgun', 'static/player_handgun.png',
@@ -79,6 +85,8 @@ function preload () {
   this.load.image('bullet', 'static/bullet72.png');
   this.load.image('powerup', 'static/jets.png');
   this.load.image('enemy', 'static/melon.png');
+
+  this.load.audio('metronome', 'static/metronome.mp3');
 }
 
 function create () {
@@ -93,8 +101,12 @@ function create () {
   //add score text
   scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
 
+  this.metronomeTicker = this.add.graphics();
+  var graphics = this.add.graphics();
+  graphics.lineStyle(2.5, 0xFFFFFF, 1);
+  graphics.strokeRect(scoreText.x+  scoreText.width + 50, -windowHeight/2 + 50, windowWidth/2, 75);
+  this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: updateMetronome, callbackScope: this, repeat: 1 << 30 });
 
-  // Set image/sprite properties
   background.setOrigin(0.5, 0.5).setDisplaySize(windowWidth*2, windowHeight*2);
   player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
 
@@ -242,4 +254,16 @@ function update (time, delta) {
 
   // Constrain velocity of player
   constrainVelocity(player, 500);
+}
+
+function updateMetronome() {
+  const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
+  const progress = ((iterations % 100) / 100.0);
+  graphics = this.metronomeTicker;
+  if (!progress) {
+    this.sound.play('metronome')﻿;
+    graphics.clear();
+   }
+  graphics.lineStyle(5, 0xFFFFFF, 1);
+  graphics.strokeRect(scoreText.x+  scoreText.width + 50 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
 }

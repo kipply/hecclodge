@@ -8,4 +8,4 @@ def get_beats(filename):
     audio = loader()
 
     beat_tracker = BeatTrackerDegara()
-    return beat_tracker(audio).tolist()
+    return beat_tracker(audio).tolist()[1] - beat_tracker(audio).tolist()[0]
