@@ -1,8 +1,11 @@
+var windowWidth = window.innerWidth;
+var windowHeight = window.innerHeight;
+
 var config = {
   type: Phaser.AUTO,
   parent: 'phaser-example',
-  width: 800,
-  height: 600,
+  width: windowWidth,
+  height: windowHeight,
   physics: {
     default: 'arcade',
     arcade: {
@@ -40,18 +43,18 @@ function preload () {
 
 function create () {
   // Create world bounds
-  this.physics.world.setBounds(0, 0, 1600, 1200);
+  this.physics.world.setBounds(windowWidth/2, windowHeight/2, windowWidth, windowHeight);
 
   // Add background, player, and reticle sprites
-  var background = this.add.image(800, 600, 'background');
-  player = this.physics.add.sprite(800, 600, 'player_handgun');
+  var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
+  player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player_handgun');
 
   //add score text
-  scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
+  scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
 
 
   // Set image/sprite properties
-  background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
+  background.setOrigin(0.5, 0.5).setDisplaySize(windowWidth*2, windowHeight*2);
   player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
 
   // Set camera zoom
@@ -183,12 +186,6 @@ function update (time, delta) {
       this.physics.add.overlap(player, enemy, playerHit, null, this);
     }
   }
-
-  // Camera follows player ( can be set in create )
-  this.cameras.main.startFollow(player);
-
-  scoreText.x = player.x - 700;
-  scoreText.y = player.y - 550;
 
   // Constrain velocity of player
   constrainVelocity(player, 500);
