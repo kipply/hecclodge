@@ -28,6 +28,52 @@ var game = new Phaser.Game(config);
 var score = 0;
 var scoreText;
 
+var Bullet = new Phaser.Class({
+
+    Extends: Phaser.GameObjects.Image,
+
+    initialize:
+
+    // Bullet Constructor
+    function Bullet (scene)
+    {
+        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'player_bullet');
+        this.speed = 1;
+        this.born = 0;
+        this.direction = 0;
+        this.xSpeed = 0;
+        this.ySpeed = 0;
+        this.setSize(12, 12, true);
+    },
+
+    // Fires a bullet from the player to the reticle
+    fire: function (shooter, target)
+    {
+        this.setPosition(shooter.x, shooter.y); // Initial position
+        this.direction = Math.PI/2 - shooter.rotation;
+
+        // Calculate X and y velocity of bullet to moves it from shooter to target
+        this.xSpeed = this.speed*Math.sin(this.direction);
+        this.ySpeed = this.speed*Math.cos(this.direction);
+        this.rotation = shooter.rotation; // angle bullet with shooters rotation
+        this.born = 0; // Time since new bullet spawned
+    },
+
+    // Updates the position of the bullet each cycle
+    update: function (time, delta)
+    {
+        this.x += this.xSpeed * delta;
+        this.y += this.ySpeed * delta;
+        this.born += delta;
+        if (this.born > 1800)
+        {
+            this.setActive(false);
+            this.setVisible(false);
+        }
+    }
+
+});
+
 function preload ()
 {
     // Load in images and sprites
@@ -38,6 +84,7 @@ function preload ()
     this.load.image('target', 'static/ball.png');
     this.load.image('background', 'static/starfield.png');
     this.load.image('bullet', 'static/bullet72.png');
+    this.load.image('player_bullet', 'static/jets.png');
     this.load.image('enemy', 'static/melon.png');
 }
 
@@ -45,6 +92,10 @@ function create ()
 {
     // Create world bounds
     this.physics.world.setBounds(0, 0, 1600, 1200);
+
+    // Add 2 groups for Bullet objects
+    playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
+    enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // Add background, player, and reticle sprites
     var background = this.add.image(800, 600, 'background');
@@ -68,7 +119,8 @@ function create ()
         'up': Phaser.Input.Keyboard.KeyCodes.W,
         'down': Phaser.Input.Keyboard.KeyCodes.S,
         'left': Phaser.Input.Keyboard.KeyCodes.A,
-        'right': Phaser.Input.Keyboard.KeyCodes.D
+        'right': Phaser.Input.Keyboard.KeyCodes.D,
+        'shoot': Phaser.Input.Keyboard.KeyCodes.SPACE
     });
 
     // Enables movement of player with WASD keys
@@ -83,6 +135,19 @@ function create ()
     });
     this.input.keyboard.on('keydown_D', function (event) {
         player.setAccelerationX(800);
+    });
+    this.input.keyboard.on('keydown_SPACE', function (event) {
+        if (player.active === false)
+            return;
+
+        // Get bullet from bullets group
+        var bullet = playerBullets.create(100, 100, 'player_bullet');
+
+        if (bullet)
+        {
+            bullet.fire(player, reticle);
+            //this.physics.add.collider(enemy, bullet, enemyHitCallback);
+        }
     });
 
     // Stops player acceleration on uppress of WASD keys
@@ -134,7 +199,6 @@ function destroyBullet(player, bullet) { //destroys bullet
 function playerHit(player, enemyBullet) { //this HURTS the player/game over!
     this.physics.pause();
     player.setTint(0xff0000);
-    player.anims.play('turn');
     gameOver = true;
 }
 
