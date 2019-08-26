@@ -1,6 +1,6 @@
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
-window.onload = function() {
+document.onload = function() {
   var context = new AudioContext();
   document.querySelector('button').addEventListener('click', function() {
     context.resume().then(() => {
