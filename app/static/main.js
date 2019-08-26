@@ -1,78 +1,177 @@
 var config = {
-    type: Phaser.CANVAS,
+    type: Phaser.AUTO,
+    parent: 'phaser-example',
     width: 800,
     height: 600,
-    backgroundColor: '#2d2d2d',
-    parent: 'phaser-example',
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { y: 0 },
+        debug: true
+      }
+    },
     scene: {
+        preload: preload,
         create: create,
-        update: update
+        update: update,
+        extend: {
+                    player: null,
+                    reticle: null,
+                    moveKeys: null,
+                    bullets: null,
+                    time: 0,
+                }
     }
 };
 
-var text;
-var graphics;
-var hsv;
-var timerEvents = [];
-
 var game = new Phaser.Game(config);
+
+function preload ()
+{
+    // Load in images and sprites
+
+    this.load.spritesheet('player_handgun', 'assets/player_handgun.png',
+        { frameWidth: 66, frameHeight: 60 }
+    ); // Made by tokkatrain: https://tokkatrain.itch.io/top-down-basic-set
+    this.load.image('target', 'assets/ball.png');
+    this.load.image('background', 'assets/underwater1.png');
+}
 
 function create ()
 {
-    text = this.add.text(32, 32);
+    // Create world bounds
+    this.physics.world.setBounds(0, 0, 1600, 1200);
 
-    for (var i = 0; i < 32; i++)
-    {
-        timerEvents.push(this.time.addEvent({ delay: Phaser.Math.Between(1000, 8000), loop: true }));
-    }
+    // Add background, player, and reticle sprites
+    var background = this.add.image(800, 600, 'background');
+    player = this.physics.add.sprite(800, 600, 'player_handgun');
+    reticle = this.physics.add.sprite(800, 700, 'target');
 
-    hsv = Phaser.Display.Color.HSVColorWheel();
+    // Set image/sprite properties
+    background.setOrigin(0.5, 0.5).setDisplaySize(1600, 1200);
+    player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
+    reticle.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
 
-    graphics = this.add.graphics({ x: 240, y: 36 });
+    // Set camera zoom
+    this.cameras.main.zoom = 0.5;
+
+    // Creates object for input with WASD kets
+    moveKeys = this.input.keyboard.addKeys({
+        'up': Phaser.Input.Keyboard.KeyCodes.W,
+        'down': Phaser.Input.Keyboard.KeyCodes.S,
+        'left': Phaser.Input.Keyboard.KeyCodes.A,
+        'right': Phaser.Input.Keyboard.KeyCodes.D
+    });
+
+    // Enables movement of player with WASD keys
+    this.input.keyboard.on('keydown_W', function (event) {
+        player.setAccelerationY(-800);
+    });
+    this.input.keyboard.on('keydown_S', function (event) {
+        player.setAccelerationY(800);
+    });
+    this.input.keyboard.on('keydown_A', function (event) {
+        player.setAccelerationX(-800);
+    });
+    this.input.keyboard.on('keydown_D', function (event) {
+        player.setAccelerationX(800);
+    });
+
+    // Stops player acceleration on uppress of WASD keys
+    this.input.keyboard.on('keyup_W', function (event) {
+        if (moveKeys['down'].isUp)
+            player.setAccelerationY(0);
+    });
+    this.input.keyboard.on('keyup_S', function (event) {
+        if (moveKeys['up'].isUp)
+            player.setAccelerationY(0);
+    });
+    this.input.keyboard.on('keyup_A', function (event) {
+        if (moveKeys['right'].isUp)
+            player.setAccelerationX(0);
+    });
+    this.input.keyboard.on('keyup_D', function (event) {
+        if (moveKeys['left'].isUp)
+            player.setAccelerationX(0);
+    });
+
+    // Locks pointer on mousedown
+    game.canvas.addEventListener('mousedown', function () {
+        game.input.mouse.requestPointerLock();
+    });
+
+    // Exit pointer lock when Q or escape (by default) is pressed.
+    this.input.keyboard.on('keydown_Q', function (event) {
+        if (game.input.mouse.locked)
+            game.input.mouse.releasePointerLock();
+    }, 0, this);
+
+    // Move reticle upon locked pointer move
+    this.input.on('pointermove', function (pointer) {
+        if (this.input.mouse.locked)
+        {
+            reticle.x += pointer.movementX;
+            reticle.y += pointer.movementY;
+        }
+    }, this);
+
 }
 
-//assume the song notation is well-formed
-function ingestNotes (intervalSize, noteArray, songLength) {
-    let validChars = 'abcdefghijklmnopqrstuvwxyz';
-    let noteMaps = {};
-    for (let i = 0; i < songLength / intervalSize; i++) {
-        noteMaps[i] = {};
-        for (let c = 0; c < validChars.length; c++) {
-            noteMaps[i][validChars.charAt(c)] = 0;
-        }
-    }
-    for (let note = 0; note < noteArray.length; note++) {
-        let start = Math.ceil(noteArray[note]['timestamp']/intervalSize) * intervalSize;
-        let end = Math.floor((noteArray[note]['timestamp'] + noteArray[note]['time']) / intervalSize) * intervalSize;
-        for (let time = start; time < end; time += intervalSize) {
-            noteMaps[time/intervalSize][noteArray[note]['char']] = 1;
-        }
-    }
-    return noteMaps;
-}
-
-function update ()
+// Ensures sprite speed doesnt exceed maxVelocity while update is called
+function constrainVelocity(sprite, maxVelocity)
 {
-    var sampleSong = {
-        0: {'a': 0, 'b': 0},
-        1: {'a': 0, 'b': 1},
-        2: {'a': 1, 'b': 1},
-        3: {'a': 1, 'b': 0},
-        4: {'a': 0, 'b': 0},
-    };
-    
-    var output = [];
+    if (!sprite || !sprite.body)
+      return;
 
-    graphics.clear();
+    var angle, currVelocitySqr, vx, vy;
+    vx = sprite.body.velocity.x;
+    vy = sprite.body.velocity.y;
+    currVelocitySqr = vx * vx + vy * vy;
 
-    for (var i = 0; i < timerEvents.length; i++)
+    if (currVelocitySqr > maxVelocity * maxVelocity)
     {
-        output.push('Event.progress: ' + timerEvents[i].getProgress().toString().substr(0, 4));
-
-        graphics.fillStyle(hsv[i * 8].color, 1);
-        graphics.fillRect(0, i * 16, 500 * timerEvents[i].getProgress(), 8);
+        angle = Math.atan2(vy, vx);
+        vx = Math.cos(angle) * maxVelocity;
+        vy = Math.sin(angle) * maxVelocity;
+        sprite.body.velocity.x = vx;
+        sprite.body.velocity.y = vy;
     }
+}
 
-    output.push('The current state: ' + JSON.stringify(sampleSong[parseInt(timerEvents[0].getProgress() * 5)]) );
-    text.setText(output);
+// Ensures reticle does not move offscreen relative to player
+function constrainReticle(reticle)
+{
+    var distX = reticle.x-player.x; // X distance between player & reticle
+    var distY = reticle.y-player.y; // Y distance between player & reticle
+
+    // Ensures reticle cannot be moved offscreen
+    if (distX > 800)
+        reticle.x = player.x+800;
+    else if (distX < -800)
+        reticle.x = player.x-800;
+
+    if (distY > 600)
+        reticle.y = player.y+600;
+    else if (distY < -600)
+        reticle.y = player.y-600;
+}
+
+function update (time, delta)
+{
+    // Rotates player to face towards reticle
+    player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y);
+
+    // Camera follows player ( can be set in create )
+    this.cameras.main.startFollow(player);
+
+    // Makes reticle move with player
+    reticle.body.velocity.x = player.body.velocity.x;
+    reticle.body.velocity.y = player.body.velocity.y;
+
+    // Constrain velocity of player
+    constrainVelocity(player, 500);
+
+    // Constrain position of reticle
+    constrainReticle(reticle);
+
 }
