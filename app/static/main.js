@@ -39,6 +39,14 @@ function preload ()
 
 function create ()
 {
+    //add bullets flying around
+    for (var i = 0; i < 30; i++) {
+        var bullet = this.physics.add.image(400, 100, 'logo');
+        bullet.setVelocity(Math.random() * 100, Math.random() * 100);
+        bullet.setBounce(1, 1);
+        bullet.setCollideWorldBounds(true);
+    }
+
     // Create world bounds
     this.physics.world.setBounds(0, 0, 1600, 1200);
 
