@@ -295,6 +295,7 @@ function updateMetronome() {
     this.sound.play('metronome')﻿;
     accuracy += currentAccuracy;
     beatHits += 1;
+    currentAccuracy = 0;
   } else if (!(progress*100 % 25)) {
     this.sound.volume = 1;
     this.sound.play('metronome')﻿;
@@ -308,8 +309,6 @@ function getRandomPoint() {
   let point = {};
   point['x'] = Math.floor(Math.random() * (windowWidth * 2 - 50) + (-windowWidth / 2 + 50));
   point['y'] = Math.floor(Math.random() * (windowHeight * 2 - 50) + (-windowHeight / 2 + 50));
-  // point['x'] = 500;
-  // point['y'] = 500;
   return point;
 }
 
