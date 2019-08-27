@@ -89,6 +89,33 @@ class SceneMain extends Phaser.Scene {
         this.enemyLasers = this.add.group();
         this.playerLasers = this.add.group();
 
+        //colliders
+        this.physics.add.collider(this.playerLasers, this.enemies, function(playerLaser, enemy) {
+            if (enemy) {
+              if (enemy.onDestroy !== undefined) {
+                enemy.onDestroy();
+              }
+              enemy.explode(true);
+              playerLaser.destroy();
+            }
+        });
+
+        this.physics.add.overlap(this.player, this.enemies, function(player, enemy) {
+          if (!player.getData("isDead") &&
+              !enemy.getData("isDead")) {
+            player.explode(false);
+            enemy.explode(true);
+          }
+        });
+
+        this.physics.add.overlap(this.player, this.enemyLasers, function(player, laser) {
+          if (!player.getData("isDead") &&
+              !laser.getData("isDead")) {
+            player.explode(false);
+            laser.destroy();
+          }
+        });
+
         this.time.addEvent({
           delay: 1000,
           callback: function() {
@@ -124,19 +151,42 @@ class SceneMain extends Phaser.Scene {
           callbackScope: this,
           loop: true
         });
+
     }
 
     update() {
-        this.player.update();
-        if (this.keyW.isDown) {this.player.moveUp();}
-        else if (this.keyS.isDown) {this.player.moveDown();}
+        if (!this.player.getData("isDead")) {
+            this.player.update();
+            if (this.keyW.isDown) {this.player.moveUp();}
+            else if (this.keyS.isDown) {this.player.moveDown();}
 
-        if (this.keyA.isDown) {this.player.moveLeft();}
-        else if (this.keyD.isDown) {this.player.moveRight();}
+            if (this.keyA.isDown) {this.player.moveLeft();}
+            else if (this.keyD.isDown) {this.player.moveRight();}
 
-        for (var i = 0; i < this.enemies.getChildren().length; i++) {
-          var enemy = this.enemies.getChildren()[i];
-          enemy.update();
+            if (this.keySpace.isDown) { this.player.setData("isShooting", true); }
+            else {
+              this.player.setData("timerShootTick", this.player.getData("timerShootDelay") - 1);
+              this.player.setData("isShooting", false);
+            }
+        }
+
+        let groupsToCull = [this.enemies, this.playerLasers, this.enemyLasers];
+        for (let g = 0; g < groupsToCull.length; g++) {
+            for (let i = 0; i < groupsToCull[g].getChildren().length; i++) {
+              let groupMember = groupsToCull[g].getChildren()[i];
+              groupMember.update();
+              if (groupMember.x < -groupMember.displayWidth ||
+                  groupMember.x > this.game.config.width + groupMember.displayWidth ||
+                  groupMember.y < -groupMember.displayHeight * 4 ||
+                  groupMember.y > this.game.config.height + groupMember.displayHeight) {
+                  if (groupMember) {
+                    if (groupMember.onDestroy !== undefined) {
+                      groupMember.onDestroy();
+                    }
+                    groupMember.destroy();
+                  }
+              }
+            }
         }
     }
 
