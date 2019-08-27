@@ -30,6 +30,9 @@ var game = new Phaser.Game(config);
 var score = 0;
 var scoreText;
 var beatLength = 0.71;
+var accuracy = 100;
+var beatHits = 0;
+var currentAccuracy = 0;
 
 var Bullet = new Phaser.Class({
   Extends: Phaser.GameObjects.Image,
@@ -102,12 +105,13 @@ function create () {
   enemyBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
 
   //add score text
-  scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'score: 0', { fontSize: '32px', fill: '#FFFFFF'});
+  scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'Accuracy', { fontSize: '32px', fill: '#FFFFFF'});
 
   this.metronomeTicker = this.add.graphics();
-  var graphics = this.add.graphics();
-  graphics.lineStyle(2.5, 0xFFFFFF, 1);
-  graphics.strokeRect(scoreText.x+  scoreText.width + 50, -windowHeight/2 + 50, windowWidth/2, 75);
+  this.target = this.add.graphics();
+  var metronomeBox = this.add.graphics();
+  metronomeBox.lineStyle(2.5, 0xFFFFFF, 1);
+  metronomeBox.strokeRect(scoreText.x + scoreText.width + 200, -windowHeight/2 + 50, windowWidth/2, 75);
   this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: updateMetronome, callbackScope: this, repeat: 1 << 30 });
 
   // Set image/sprite properties
@@ -130,16 +134,16 @@ function create () {
 
   // Enables movement of player with WASD keys
   this.input.keyboard.on('keydown_W', function (event) {
-    player.setAccelerationY(-800);
+    player.setAccelerationY(-1600);
   });
   this.input.keyboard.on('keydown_S', function (event) {
-    player.setAccelerationY(800);
+    player.setAccelerationY(1600);
   });
   this.input.keyboard.on('keydown_A', function (event) {
-    player.setAccelerationX(-800);
+    player.setAccelerationX(-1600);
   });
   this.input.keyboard.on('keydown_D', function (event) {
-    player.setAccelerationX(800);
+    player.setAccelerationX(1600);
   });
   this.input.keyboard.on('keydown_L', function (event) {
     player.setAngularAcceleration(400);
@@ -193,7 +197,6 @@ function create () {
 function destroyBullet(player, bullet) { //destroys bullet
   bullet.disableBody(true, true);
   score += 10;
-  scoreText.setText('Score: ' + score);
 }
 
 function playerHit(player, enemyBullet) { //this HURTS the player/game over!
@@ -256,20 +259,64 @@ function update(time, delta) {
   // Enemy actions
   enemy.rotation = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
   enemyFire(enemy, player, time, this);
+
+  // update accuracy if applicable - update accuracy of last target location if applicable
+  if (this.lastTargetLocation && getDistance(player, this.lastTargetLocation) <= getBufferArea()) {
+    newAccuracy = 1 - (this.metronomeTimer.elapsed/1000) % (beatLength * 4) / (beatLength*4);
+    currentAccuracy = Math.max(currentAccuracy, newAccuracy * 100);
+  } else if (getDistance(player, this.targetLocation) <= getBufferArea()) {
+    newAccuracy = (this.metronomeTimer.elapsed/1000) % (beatLength * 4) / (beatLength*4);
+    currentAccuracy = Math.max(currentAccuracy, newAccuracy* 100);
+  }
+
+  scoreText.setText('Accuracy ' + Math.round(accuracy/beatHits * 10) / 10);
 }
 
 function updateMetronome() {
   const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
   const progress = ((iterations % 100) / 100.0);
-  graphics = this.metronomeTicker;
+  metronomeTicker = this.metronomeTicker;
+  target = this.target;
   if (!progress) {
+    target.clear();
     this.sound.volume = 10;
     this.sound.play('metronome')﻿;
-    graphics.clear();
-   } else if (!(progress*100 % 25)) {
+    this.lastTargetLocation = Object.assign({}, this.targetLocation);
+    this.targetLocation = getRandomPoint();
+    target.fillStyle(0xFF0000, 1);
+    target.fillCircle(this.targetLocation.x, this.targetLocation.y, 25);
+    target.fillStyle(0x0000FF, 1);
+    target.fillCircle(this.lastTargetLocation.x, this.lastTargetLocation.y, 25);
+  } else if ((progress * 100) / 25 === 1) {
+    target.clear();
+    target.fillStyle(0xFF0000, 1);
+    target.fillCircle(this.targetLocation.x, this.targetLocation.y, 25);
+    this.sound.volume = 1;
+    this.sound.play('metronome')﻿;
+    accuracy += currentAccuracy;
+    beatHits += 1;
+  } else if (!(progress*100 % 25)) {
     this.sound.volume = 1;
     this.sound.play('metronome')﻿;
   }
-  graphics.lineStyle(5, 0xFFFFFF, 1);
-  graphics.strokeRect(scoreText.x+  scoreText.width + 50 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
+  metronomeTicker.clear();
+  metronomeTicker.lineStyle(5, 0xFFFFFF, 1);
+  metronomeTicker.strokeRect(scoreText.x + scoreText.width + 200 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
+}
+
+function getRandomPoint() {
+  let point = {};
+  point['x'] = Math.floor(Math.random() * (windowWidth * 2 - 50) + (-windowWidth / 2 + 50));
+  point['y'] = Math.floor(Math.random() * (windowHeight * 2 - 50) + (-windowHeight / 2 + 50));
+  // point['x'] = 500;
+  // point['y'] = 500;
+  return point;
+}
+
+function getDistance(one, two) {
+  return Math.pow(Math.pow(one.x - two.x, 2) + Math.pow(one.y - two.y, 2), 0.5)
+}
+
+function getBufferArea() {
+  return Math.max(windowHeight, windowWidth) * 0.05;
 }
