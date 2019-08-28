@@ -50,13 +50,13 @@ function preload () {
   this.load.image('enemy', 'static/melon.png');
   this.load.image('enemy_bullet', 'static/melon.png');
   this.load.spritesheet('sprEnemy0', 'static/content/sprEnemy0.png', {
-      frameWidth: 16, frameHeight: 16
+    frameWidth: 16, frameHeight: 16
   });
   this.load.spritesheet('sprEnemy2', 'static/content/sprEnemy2.png', {
-      frameWidth: 16, frameHeight: 16
+    frameWidth: 16, frameHeight: 16
   });
   this.load.spritesheet('sprExplosion', 'static/content/sprExplosion.png', {
-      frameWidth: 32, frameHeight: 32
+    frameWidth: 32, frameHeight: 32
   });
 
   this.load.audio('metronome', 'static/metronome.mp3');
@@ -68,29 +68,29 @@ function preload () {
 function create () {
   //create animations
   this.anims.create({
-      key: "sprEnemy0",
-      frames: this.anims.generateFrameNumbers("sprEnemy0"),
-      frameRate: 20,
-      repeat: -1
+    key: "sprEnemy0",
+    frames: this.anims.generateFrameNumbers("sprEnemy0"),
+    frameRate: 20,
+    repeat: -1
   });
   this.anims.create({
-      key: "sprEnemy2",
-      frames: this.anims.generateFrameNumbers("sprEnemy2"),
-      frameRate: 20,
-      repeat: -1
+    key: "sprEnemy2",
+    frames: this.anims.generateFrameNumbers("sprEnemy2"),
+    frameRate: 20,
+    repeat: -1
   });
   this.anims.create({
-      key: "sprExplosion",
-      frames: this.anims.generateFrameNumbers("sprExplosion"),
-      frameRate: 20,
-      repeat: 0
+    key: "sprExplosion",
+    frames: this.anims.generateFrameNumbers("sprExplosion"),
+    frameRate: 20,
+    repeat: 0
   });
   this.sfx = {
-      explosions: [
-          this.sound.add("sndExplode0"),
-          this.sound.add("sndExplode1")
-      ],
-      laser: this.sound.add("sndLaser")
+    explosions: [
+    this.sound.add("sndExplode0"),
+    this.sound.add("sndExplode1")
+    ],
+    laser: this.sound.add("sndLaser")
   };
 
   // Create world bounds
@@ -101,10 +101,10 @@ function create () {
   player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player_handgun');
   player.setBounce(false);
   player.setImmovable(true);
-  
+
   this.enemies = this.add.group();
   this.enemyBullets = this.add.group();
-    
+
   playerBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
 
   //add score text
@@ -155,16 +155,16 @@ function create () {
     player.setAngularAcceleration(-400);
   });
   this.input.keyboard.on('keydown_SPACE', function (event) {
-      if (player.active === false)
-          return;
+    if (player.active === false)
+      return;
 
-      // Get bullet from bullets group
-      var bullet = playerBullets.create(300, 300, 'player_bullet');
+    // Get bullet from bullets group
+    var bullet = playerBullets.create(300, 300, 'player_bullet');
 
-      if (bullet) {
-          bullet.fire(player);
-          //this.physics.add.collider(enemy, bullet, enemyHitCallback);
-      }
+    if (bullet) {
+      bullet.fire(player);
+      //this.physics.add.collider(enemy, bullet, enemyHitCallback);
+    }
   });
 
 
@@ -188,39 +188,39 @@ function create () {
   this.input.keyboard.on('keyup_L', function (event) {
     if (moveKeys['rotate_left'].isUp)
       player.setAngularAcceleration(0);
-      player.setAngularVelocity(0);
+    player.setAngularVelocity(0);
   });
   this.input.keyboard.on('keyup_R', function (event) {
     if (moveKeys['rotate_left'].isUp)
       player.setAngularAcceleration(0);
-      player.setAngularVelocity(0);
+    player.setAngularVelocity(0);
   });
 
   //colliders
   //NOTE: order is NOT typical in this code (investigate why later)
   this.physics.add.collider(playerBullets, this.enemies, function(enemy, bullet) {
-      if (enemy) {
-          enemy.explode(true);
-          bullet.destroy();
-      }
+    if (enemy) {
+      enemy.explode(true);
+      bullet.destroy();
+    }
   });
 
   //testing code: generate new enemies
   this.time.addEvent({
-      delay: 5000,
-      callback: function() {
-          let enemy = new HexSpiralBulletEnemy(
-              this,
-              Phaser.Math.Between(0, this.game.config.width),
-              0
-          );
-          if (enemy !== null) {
-              enemy.setScale(Phaser.Math.Between(10,20) * 0.1);
-              this.enemies.add(enemy);
-          }
-      },
-      callbackScope: this,
-      loop: true
+    delay: 5000,
+    callback: function() {
+      let enemy = new HexSpiralBulletEnemy(
+        this,
+        Phaser.Math.Between(0, this.game.config.width),
+        0
+        );
+      if (enemy !== null) {
+        enemy.setScale(Phaser.Math.Between(10,20) * 0.1);
+        this.enemies.add(enemy);
+      }
+    },
+    callbackScope: this,
+    loop: true
   });
 }
 
@@ -245,8 +245,7 @@ function constrainVelocity(sprite, maxVelocity) {
   vy = sprite.body.velocity.y;
   currVelocitySqr = vx * vx + vy * vy;
 
-  if (currVelocitySqr > maxVelocity * maxVelocity)
-  {
+  if (currVelocitySqr > maxVelocity * maxVelocity) {
     angle = Math.atan2(vy, vx);
     vx = Math.cos(angle) * maxVelocity;
     vy = Math.sin(angle) * maxVelocity;
@@ -273,21 +272,21 @@ function update(time, delta) {
 
   let groupsToCull = [this.enemies, this.enemyBullets];
   for (let g = 0; g < groupsToCull.length; g++) {
-      for (let i = 0; i < groupsToCull[g].getChildren().length; i++) {
-        let groupMember = groupsToCull[g].getChildren()[i];
-        groupMember.update();
-        if (groupMember.x < -groupMember.displayWidth ||
-            groupMember.x > this.game.config.width + groupMember.displayWidth ||
-            groupMember.y < -groupMember.displayHeight * 4 ||
-            groupMember.y > this.game.config.height + groupMember.displayHeight) {
-            if (groupMember) {
-              if (groupMember.onDestroy !== undefined) {
-                groupMember.onDestroy();
-              }
-              groupMember.destroy();
-            }
+    for (let i = 0; i < groupsToCull[g].getChildren().length; i++) {
+      let groupMember = groupsToCull[g].getChildren()[i];
+      groupMember.update();
+      if (groupMember.x < -groupMember.displayWidth ||
+        groupMember.x > this.game.config.width + groupMember.displayWidth ||
+        groupMember.y < -groupMember.displayHeight * 4 ||
+        groupMember.y > this.game.config.height + groupMember.displayHeight) {
+        if (groupMember) {
+          if (groupMember.onDestroy !== undefined) {
+            groupMember.onDestroy();
+          }
+          groupMember.destroy();
         }
       }
+    }
   }
 }
 
