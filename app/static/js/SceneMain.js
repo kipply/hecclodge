@@ -114,7 +114,7 @@ function create () {
   this.target = this.add.graphics();
   var metronomeBox = this.add.graphics();
   metronomeBox.lineStyle(2.5, 0xFFFFFF, 1);
-  metronomeBox.strokeRect(scoreText.x + scoreText.width + 200, -windowHeight/2 + 50, windowWidth/2, 75);
+  metronomeBox.strokeRect(windowHeight/3, -windowHeight/2 + 50, windowWidth/2, 75);
   this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: updateMetronome, callbackScope: this, repeat: 1 << 30 });
 
   // Set image/sprite properties
@@ -320,7 +320,7 @@ function updateMetronome() {
   }
   metronomeTicker.clear();
   metronomeTicker.lineStyle(5, 0xFFFFFF, 1);
-  metronomeTicker.strokeRect(scoreText.x + scoreText.width + 200 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
+  metronomeTicker.strokeRect(windowHeight/3 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
 }
 
 function getRandomPoint() {
