@@ -66,6 +66,7 @@ var Game = new Phaser.Class({
     });
 
     this.load.audio('metronome', 'static/metronome.mp3');
+    this.load.audio('song', 'static/test.mp3');
     this.load.audio('sndExplode0', 'static/content/sndExplode0.wav');
     this.load.audio('sndExplode1', 'static/content/sndExplode1.wav');
     this.load.audio('sndLaser', 'static/content/sndLaser.wav');
@@ -99,6 +100,10 @@ var Game = new Phaser.Class({
       laser: this.sound.add("sndLaser")
     };
 
+    this.song = this.sound.add('song');
+    this.song.setVolume(3);
+    this.song.play();
+
     // Create world bounds
     this.physics.world.setBounds(-windowWidth/2, -windowHeight/2, windowWidth*2, windowHeight*2);
 
@@ -121,6 +126,7 @@ var Game = new Phaser.Class({
     var metronomeBox = this.add.graphics();
     metronomeBox.lineStyle(2.5, 0xFFFFFF, 1);
     metronomeBox.strokeRect(windowHeight/3, -windowHeight/2 + 50, windowWidth/2, 75);
+    this.metronomeSound = this.sound.add('metronome');
     this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
 
     // Set image/sprite properties
@@ -302,8 +308,8 @@ var Game = new Phaser.Class({
     target = this.target;
     if (!progress) {
       target.clear();
-      this.sound.volume = 10;
-      this.sound.play('metronome')﻿;
+      this.metronomeSound.setVolume(5)
+      this.metronomeSound.play()﻿;
       this.lastTargetLocation = Object.assign({}, this.targetLocation);
       this.targetLocation = getRandomPoint();
       target.fillStyle(0xFF0000, 1);
@@ -314,14 +320,14 @@ var Game = new Phaser.Class({
       target.clear();
       target.fillStyle(0xFF0000, 1);
       target.fillCircle(this.targetLocation.x, this.targetLocation.y, 25);
-      this.sound.volume = 1;
-      this.sound.play('metronome')﻿;
+      this.metronomeSound.setVolume(2)
+      this.metronomeSound.play()﻿;
       accuracy += currentAccuracy;
       beatHits += 1;
       currentAccuracy = 0;
     } else if (!(progress*100 % 25)) {
-      this.sound.volume = 1;
-      this.sound.play('metronome')﻿;
+      this.metronomeSound.setVolume(2)
+      this.metronomeSound.play()﻿;
     }
     metronomeTicker.clear();
     metronomeTicker.lineStyle(5, 0xFFFFFF, 1);
