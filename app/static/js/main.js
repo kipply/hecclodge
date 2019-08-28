@@ -287,4 +287,5 @@ class SceneMain extends Phaser.Scene {
   function getBufferArea() {
     return Math.max(windowHeight, windowWidth) * 0.05;
   }
+
 }
