@@ -221,11 +221,13 @@ var GameScene = new Phaser.Class({
     this.constrainVelocity(player, 500);
 
     // update accuracy if applicable - update accuracy of last target location if applicable
-    if (this.lastTargetLocation && getDistance(player, this.lastTargetLocation) <= getBufferArea()) {
-      newAccuracy = 1 - (this.metronomeTimer.elapsed/1000) % (beatLength * 4) / (beatLength*4);
+    const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
+    const progress = (iterations / 4) % 1 + 1/4;
+    if (this.lastTargetLocation && getDistance(player, this.lastTargetLocation) <= getBufferArea() && progress <= 0.25) {
+      newAccuracy = (beatLength * 1000 - (this.metronomeTimer.elapsed)) / (beatLength*1000);
       currentAccuracy = Math.max(currentAccuracy, newAccuracy * 100);
-    } else if (getDistance(player, this.targetLocation) <= getBufferArea()) {
-      newAccuracy = (this.metronomeTimer.elapsed/1000) % (beatLength * 4) / (beatLength*4);
+    } else if (getDistance(player, this.targetLocation) <= getBufferArea() && progress > 0.25) {
+      newAccuracy = (this.metronomeTimer.elapsed) / (beatLength*1000);
       currentAccuracy = Math.max(currentAccuracy, newAccuracy* 100);
     }
 
@@ -259,7 +261,7 @@ var GameScene = new Phaser.Class({
     const progress = (iterations / 4) % 1 + 1/4;
     let metronomeTicker = this.metronomeTicker;
     let target = this.target;
-    if (!progress) {
+    if (progress == 1) {
       target.clear();
       this.metronomeSound.setVolume(5)
       this.metronomeSound.play()﻿;
@@ -275,6 +277,13 @@ var GameScene = new Phaser.Class({
       target.fillCircle(this.targetLocation.x, this.targetLocation.y, 25);
       this.metronomeSound.setVolume(2)
       this.metronomeSound.play()﻿;
+
+      if (this.accuracyDisplay) {
+        this.accuracyDisplay.destroy()
+      }
+      if (this.lastTargetLocation) {
+        this.accuracyDisplay = this.add.text(this.lastTargetLocation.x, this.lastTargetLocation.y, currentAccuracy,  { fontSize: '32px', fill: '#FFFFFF'})
+      }
       accuracy += currentAccuracy;
       beatHits += 1;
       currentAccuracy = 0;
