@@ -8,4 +8,22 @@ class EnemyEvents {
       }
     }
   }
+
+  burstEnemyLine(scene, minSize, maxSize, enemyGroup) {
+    let start = minSize;
+    scene.time.addEvent({
+      delay: 1000,
+      repeat: 5,
+      callback: function() {
+        let enemy = new BurstEnemy(scene, start, 0);
+        if (enemy !== null) {
+          enemy.setScale(1.5);
+          enemyGroup.add(enemy);
+          start += 50;
+        }
+      }, 
+      callbackScope: scene,
+      loop: false
+    });
+  }
 }

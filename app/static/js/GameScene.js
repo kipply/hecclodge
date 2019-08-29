@@ -182,8 +182,7 @@ var GameScene = new Phaser.Class({
         bullet.destroy();
       }
     });
-    this.firstRound = false;
-    this.secondRound = false;
+    this.waveCounter = 0;
   },
 
   destroyBullet: function(player, bullet) { //destroys bullet
@@ -253,6 +252,15 @@ var GameScene = new Phaser.Class({
 
     for (let i = 0; i < this.backgrounds.length; i++) {
       this.backgrounds[i].update();
+    }
+
+    if (this.waveCounter === 0 && time >= 4000) {
+      this.waveCounter += 1;
+      this.enemyEvents.spiralEnemyLine(this, 0, 500, this.enemies);
+    }
+    if (this.waveCounter === 1 && time >= 8000) {
+      this.waveCounter += 1;
+      this.enemyEvents.burstEnemyLine(this, 400, 800, this.enemies);
     }
   },
 
