@@ -1,60 +1,23 @@
-var Bullet = new Phaser.Class({
-  Extends: Phaser.GameObjects.Image,
-
-  initialize:
-  // Bullet Constructor
-  function Bullet (scene) {
-    Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-    this.speed = 1;
-    this.direction = 0;
-    this.xSpeed = 0;
-    this.ySpeed = 0;
-    this.setSize(12, 12, true);
-    this.scene = scene;
-  },
-
-  // Fires a bullet from the player to the reticle
-  fire: function (shooter) {
-    this.setPosition(shooter.x, shooter.y); // Initial position
-    this.direction = Math.PI/2 - shooter.rotation;
-
-    // Calculate X and y velocity of bullet to moves it from shooter to target
-    this.xSpeed = this.speed*Math.sin(this.direction);
-    this.ySpeed = this.speed*Math.cos(this.direction);
-    this.rotation = shooter.rotation; // angle bullet with shooters rotation
-  },
-
-  // Updates the position of the bullet each cycle
-  update: function (time, delta) {
-    this.body.setImmovable(true);
-    this.x += this.xSpeed * delta;
-    this.y += this.ySpeed * delta;
-
-    const bounds = this.scene.physics.world.bounds;
-    if (this.x < bounds.x || this.y < bounds.y || this.x > bounds.x + bounds.width || this.y > bounds.y + bounds.height){
-      this.destroy();
-    }
-  }
-});
-
-var Game = new Phaser.Class({
+var GameScene = new Phaser.Class({
   Extends: Phaser.Scene,
 
   initialize:
 
-  function Game() {
-      Phaser.Scene.call(this, { key: 'game', active: true });
+  function GameScene() {
+      Phaser.Scene.call(this, { key: 'gameScene', active: true });
   },
 
   preload: function() {
     this.audioContext = new AudioContext();
     // Load in images and sprites
-    this.load.spritesheet('player_handgun', 'static/player_handgun.png',
+    this.load.spritesheet('player', 'static/spaceship.png',
       { frameWidth: 66, frameHeight: 60 }
     );
     this.load.image('background', 'static/starfield.png');
+    this.load.image('bullet', 'static/bullet72.png');
     this.load.image('enemy', 'static/melon.png');
-    this.load.image('enemy_bullet', 'static/melon.png');
+    this.load.image('enemy_bullet', 'static/jets.png');
+
     this.load.spritesheet('sprEnemy0', 'static/content/sprEnemy0.png', {
       frameWidth: 16, frameHeight: 16
     });
@@ -109,14 +72,17 @@ var Game = new Phaser.Class({
 
     // Add background, player sprites, and bullets
     var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
-    player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player_handgun');
+    player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player');
+    player = player;
     player.setBounce(false);
     player.setImmovable(true);
 
     this.enemies = this.add.group();
     this.enemyBullets = this.add.group();
 
-    playerBullets = this.physics.add.group({classType: Bullet, runChildUpdate: true});
+    playerBullets = this.add.group();
+    this.playerBullets = playerBullets;
+    this.enemyEvents = new EnemyEvents();
 
     //add score text
     scoreText = this.add.text(-windowWidth/2 + 50, -windowHeight/2 + 50, 'Accuracy', { fontSize: '32px', fill: '#FFFFFF'});
@@ -137,7 +103,7 @@ var Game = new Phaser.Class({
     this.cameras.main.zoom = 0.5;
 
     // Creates object for input with WASD kets
-    moveKeys = this.input.keyboard.addKeys({
+    let moveKeys = this.input.keyboard.addKeys({
       'up': Phaser.Input.Keyboard.KeyCodes.W,
       'down': Phaser.Input.Keyboard.KeyCodes.S,
       'left': Phaser.Input.Keyboard.KeyCodes.A,
@@ -170,13 +136,8 @@ var Game = new Phaser.Class({
       if (player.active === false)
         return;
 
-      // Get bullet from bullets group
-      var bullet = playerBullets.create(300, 300, 'player_bullet');
-
-      if (bullet) {
-        bullet.fire(player);
-        //this.physics.add.collider(enemy, bullet, enemyHitCallback);
-      }
+      let bullet = new PlayerBullet(this.scene, player.x, player.y, 0, -500);
+      playerBullets.add(bullet);
     });
 
 
@@ -198,42 +159,28 @@ var Game = new Phaser.Class({
         player.setAccelerationX(0);
     });
     this.input.keyboard.on('keyup_L', function (event) {
-      if (moveKeys['rotate_left'].isUp)
+      if (moveKeys['rotate_left'].isUp) {
+        player.setAngularVelocity(0);
         player.setAngularAcceleration(0);
-      player.setAngularVelocity(0);
+      }
     });
     this.input.keyboard.on('keyup_R', function (event) {
-      if (moveKeys['rotate_left'].isUp)
+      if (moveKeys['rotate_left'].isUp){
+        player.setAngularVelocity(0);
         player.setAngularAcceleration(0);
-      player.setAngularVelocity(0);
+      }
     });
 
     //colliders
     //NOTE: order is NOT typical in this code (investigate why later)
-    this.physics.add.collider(playerBullets, this.enemies, function(enemy, bullet) {
+    this.physics.add.collider(this.playerBullets, this.enemies, function(bullet, enemy) {
       if (enemy) {
         enemy.explode(true);
         bullet.destroy();
       }
     });
-
-    //testing code: generate new enemies
-    this.time.addEvent({
-      delay: 5000,
-      callback: function() {
-        let enemy = new HexSpiralBulletEnemy(
-          this,
-          Phaser.Math.Between(0, this.game.config.width),
-          0
-          );
-        if (enemy !== null) {
-          enemy.setScale(Phaser.Math.Between(10,20) * 0.1);
-          this.enemies.add(enemy);
-        }
-      },
-      callbackScope: this,
-      loop: true
-    });
+    this.firstRound = false;
+    this.secondRound = false;
   },
 
   destroyBullet: function(player, bullet) { //destroys bullet
@@ -281,21 +228,20 @@ var Game = new Phaser.Class({
 
     scoreText.setText('Accuracy ' + Math.round(accuracy/beatHits * 10) / 10);
 
-    let groupsToCull = [this.enemies, this.enemyBullets];
+    let groupsToCull = [this.enemies, this.enemyBullets, this.playerBullets];
+    const bounds = this.physics.world.bounds;
     for (let g = 0; g < groupsToCull.length; g++) {
       for (let i = 0; i < groupsToCull[g].getChildren().length; i++) {
         let groupMember = groupsToCull[g].getChildren()[i];
         groupMember.update();
-        if (groupMember.x < -groupMember.displayWidth ||
-          groupMember.x > this.game.config.width + groupMember.displayWidth ||
-          groupMember.y < -groupMember.displayHeight * 4 ||
-          groupMember.y > this.game.config.height + groupMember.displayHeight) {
-          if (groupMember) {
-            if (groupMember.onDestroy !== undefined) {
-              groupMember.onDestroy();
-            }
-            groupMember.destroy();
+        if (groupMember.x < bounds.x ||
+          groupMember.x > bounds.x + bounds.width ||
+          groupMember.y < bounds.y ||
+          groupMember.y > bounds.y + bounds.height) {
+          if (groupMember.onDestroy !== undefined) {
+            groupMember.onDestroy();
           }
+          groupMember.destroy();
         }
       }
     }
@@ -304,8 +250,8 @@ var Game = new Phaser.Class({
   updateMetronome: function() {
     const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
     const progress = ((iterations % 100) / 100.0);
-    metronomeTicker = this.metronomeTicker;
-    target = this.target;
+    let metronomeTicker = this.metronomeTicker;
+    let target = this.target;
     if (!progress) {
       target.clear();
       this.metronomeSound.setVolume(5)

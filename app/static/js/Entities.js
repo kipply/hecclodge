@@ -170,4 +170,13 @@ class EnemyBullet extends Entity {
 }
 
 
+class PlayerBullet extends Entity {
+  constructor(scene, x, y, velX, velY) {
+    super(scene, x, y, "bullet");
+    this.body.velocity.x = velX;
+    this.body.velocity.y = velY;
+  }
+}
+
+
 

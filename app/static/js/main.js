@@ -14,7 +14,7 @@ var config = {
     }
   },
   scene: [
-    MainMenu
+    MainMenuScene
   ]
 };
 
