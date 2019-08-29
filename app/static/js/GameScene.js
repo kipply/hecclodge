@@ -94,6 +94,12 @@ var GameScene = new Phaser.Class({
     this.metronomeTimer = this.time.addEvent({ delay: beatLength * 1000, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
     this.targetLocation = getRandomPoint();
 
+    // set up health bar
+    var healthBarBack = this.add.graphics();
+    healthBarBack.lineStyle(2.5, 0xFFFFFF, 1);
+    healthBarBack.strokeRect(windowHeight * 1.5 - 80, -windowHeight/2 + 50, windowWidth/3, 50);
+    this.healthBar = this.add.graphics();
+
     // Set image/sprite properties
     player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
     this.backgrounds = [];
@@ -262,6 +268,14 @@ var GameScene = new Phaser.Class({
       this.waveCounter += 1;
       this.enemyEvents.burstEnemyLine(this, 400, 800, this.enemies);
     }
+
+    this.healthBar.clear();
+    if (playerHealth < 50) {
+      this.healthBar.fillStyle(0xff0000, 1);
+    } else {
+      this.healthBar.fillStyle(0x00ff00, 1);
+    }
+    this.healthBar.fillRect(windowHeight * 1.5 - 80, -windowHeight/2 + 50, windowWidth/300 * playerHealth, 50)
   },
 
   updateMetronome: function() {
