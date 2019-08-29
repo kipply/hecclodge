@@ -28,4 +28,4 @@ var accuracy = 100;
 var beatHits = 0;
 var currentAccuracy = 0;
 var gameStarted = false;
-var playerHealth = 40;
+var playerHealth = 100;
