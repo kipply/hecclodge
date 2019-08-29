@@ -277,7 +277,7 @@ var GameScene = new Phaser.Class({
       target.fillCircle(this.targetLocation.x, this.targetLocation.y, 25);
       this.metronomeSound.setVolume(2)
       this.metronomeSound.play()﻿;
-
+      currentAccuracy = Math.round(currentAccuracy);
       if (this.accuracyDisplay) {
         this.accuracyDisplay.destroy()
       }
