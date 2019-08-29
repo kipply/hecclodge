@@ -93,7 +93,8 @@ var GameScene = new Phaser.Class({
     metronomeBox.lineStyle(2.5, 0xFFFFFF, 1);
     metronomeBox.strokeRect(windowHeight/3, -windowHeight/2 + 50, windowWidth/2, 75);
     this.metronomeSound = this.sound.add('metronome');
-    this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
+    this.metronomeTimer = this.time.addEvent({ delay: beatLength * 1000, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
+    this.targetLocation = getRandomPoint();
 
     // Set image/sprite properties
     background.setOrigin(0.5, 0.5).setDisplaySize(windowWidth*2, windowHeight*2);
@@ -249,7 +250,7 @@ var GameScene = new Phaser.Class({
 
   updateMetronome: function() {
     const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
-    const progress = ((iterations % 100) / 100.0);
+    const progress = (iterations / 4) % 1 + 1/4;
     let metronomeTicker = this.metronomeTicker;
     let target = this.target;
     if (!progress) {
