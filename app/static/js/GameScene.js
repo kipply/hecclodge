@@ -10,10 +10,9 @@ var GameScene = new Phaser.Class({
   preload: function() {
     this.audioContext = new AudioContext();
     // Load in images and sprites
-    this.load.spritesheet('player', 'static/spaceship.png',
-      { frameWidth: 66, frameHeight: 60 }
-    );
-    this.load.image('background', 'static/starfield.png');
+    this.load.image('player', 'static/content/spaceship.png');
+    this.load.image('sprBg0', 'static/content/sprBg0.png');
+    this.load.image('sprBg1', 'static/content/sprBg1.png');
     this.load.image('bullet', 'static/bullet72.png');
     this.load.image('enemy', 'static/melon.png');
     this.load.image('enemy_bullet', 'static/jets.png');
@@ -71,7 +70,6 @@ var GameScene = new Phaser.Class({
     this.physics.world.setBounds(-windowWidth/2, -windowHeight/2, windowWidth*2, windowHeight*2);
 
     // Add background, player sprites, and bullets
-    var background = this.add.image(windowWidth/2, windowHeight/2, 'background');
     player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player');
     player = player;
     player.setBounce(false);
@@ -96,8 +94,12 @@ var GameScene = new Phaser.Class({
     this.metronomeTimer = this.time.addEvent({ delay: beatLength * 10, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
 
     // Set image/sprite properties
-    background.setOrigin(0.5, 0.5).setDisplaySize(windowWidth*2, windowHeight*2);
     player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
+    this.backgrounds = [];
+    for (let i = 0; i < 5; i++) {
+      let bg = new ScrollingBackground(this, "sprBg0", i * 10);
+      this.backgrounds.push(bg);
+    }
 
     // Set camera zoom
     this.cameras.main.zoom = 0.5;
@@ -244,6 +246,10 @@ var GameScene = new Phaser.Class({
           groupMember.destroy();
         }
       }
+    }
+
+    for (let i = 0; i < this.backgrounds.length; i++) {
+      this.backgrounds[i].update();
     }
   },
 
