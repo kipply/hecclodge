@@ -1,10 +1,10 @@
-var MainMenu = new Phaser.Class({
+var MainMenuScene = new Phaser.Class({
   Extends: Phaser.Scene,
 
   initialize:
 
-  function MainMenu() {
-    Phaser.Scene.call(this, { key: 'mainMenu', active: true });
+  function MainMenuScene() {
+    Phaser.Scene.call(this, { key: 'mainMenuScene', active: true });
   },
 
   preload: function() {
@@ -23,9 +23,8 @@ var MainMenu = new Phaser.Class({
     });
 
     this.input.keyboard.on('keydown_SPACE', function (event) {
-      console.log("hi")
-      game.scene.remove('mainMenu');
-      game.scene.add('game', Game, true);
+      game.scene.remove('mainMenuScene');
+      game.scene.add('gameScene', GameScene, true);
       gameStarted = true;
     });
 
