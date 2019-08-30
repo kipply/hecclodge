@@ -268,13 +268,31 @@ var GameScene = new Phaser.Class({
       this.backgrounds[i].update();
     }
 
-    if (this.waveCounter === 0 && time >= 4000) {
+    console.log(time);
+    let waveTime = 10000;
+    if (this.waveCounter === 0 && time >= waveTime * this.waveCounter) {
       this.waveCounter += 1;
-      this.enemyEvents.spiralEnemyLine(this, 0, 500, this.enemies);
-    }
-    if (this.waveCounter === 1 && time >= 8000) {
+    } else if (this.waveCounter === 1 && time >= waveTime * this.waveCounter) {
       this.waveCounter += 1;
-      this.enemyEvents.burstEnemyLine(this, 400, 800, this.enemies);
+      this.enemyEvents.noFireEnemyLine(this, 800, 801, this.enemies);
+    } else if (this.waveCounter === 2 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 1;
+      this.enemyEvents.noFireEnemyLine(this, 400, 401, this.enemies);
+    } else if (this.waveCounter === 3 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 1;
+      this.enemyEvents.noFireEnemyLine(this, 600, 601, this.enemies);
+    } else if (this.waveCounter === 4 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 1;
+      this.enemyEvents.noFireEnemyLine(this, 200, 300, this.enemies);
+    } else if (this.waveCounter === 5 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 1;
+      this.enemyEvents.noFireEnemyLine(this, 700, 800, this.enemies);
+    } else if (this.waveCounter === 6 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 2; //waveCounter is a clock for the waves
+      this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
+    } else if (this.waveCounter === 7 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 2;
+      this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
     }
 
     this.healthBar.clear();
