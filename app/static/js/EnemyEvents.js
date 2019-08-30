@@ -13,7 +13,7 @@ class EnemyEvents {
     let start = minSize;
     scene.time.addEvent({
       delay: 1000,
-      repeat: parseInt((maxSize - minSize)/100) + 1,
+      repeat: parseInt((maxSize - minSize)/100),
       callback: function() {
         let enemy = new BurstEnemy(scene, start, 0);
         if (enemy !== null) {

@@ -101,7 +101,7 @@ var GameScene = new Phaser.Class({
     this.healthBar = this.add.graphics();
 
     // Set image/sprite properties
-    player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
+    player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(0, 0);
     this.backgrounds = [];
     for (let i = 0; i < 5; i++) {
       let bg = new ScrollingBackground(this, "sprBg0", i * 10);
@@ -124,22 +124,16 @@ var GameScene = new Phaser.Class({
 
     // Enables movement of player with WASD keys
     this.input.keyboard.on('keydown_W', function (event) {
-      player.setAccelerationY(-1600);
+      player.setVelocityY(-500);
     });
     this.input.keyboard.on('keydown_S', function (event) {
-      player.setAccelerationY(1600);
+      player.setVelocityY(500);
     });
     this.input.keyboard.on('keydown_A', function (event) {
-      player.setAccelerationX(-1600);
+      player.setVelocityX(-500);
     });
     this.input.keyboard.on('keydown_D', function (event) {
-      player.setAccelerationX(1600);
-    });
-    this.input.keyboard.on('keydown_L', function (event) {
-      player.setAngularAcceleration(400);
-    });
-    this.input.keyboard.on('keydown_R', function (event) {
-      player.setAngularAcceleration(-400);
+      player.setVelocityX(500);
     });
     this.input.keyboard.on('keydown_SPACE', function (event) {
       if (player.active === false)
@@ -152,32 +146,16 @@ var GameScene = new Phaser.Class({
 
     // Stops player acceleration on uppress of WASD keys
     this.input.keyboard.on('keyup_W', function (event) {
-      if (moveKeys['down'].isUp)
-        player.setAccelerationY(0);
+        player.setVelocityY(0);
     });
     this.input.keyboard.on('keyup_S', function (event) {
-      if (moveKeys['up'].isUp)
-        player.setAccelerationY(0);
+        player.setVelocityY(0);
     });
     this.input.keyboard.on('keyup_A', function (event) {
-      if (moveKeys['right'].isUp)
-        player.setAccelerationX(0);
+        player.setVelocityX(0);
     });
     this.input.keyboard.on('keyup_D', function (event) {
-      if (moveKeys['left'].isUp)
-        player.setAccelerationX(0);
-    });
-    this.input.keyboard.on('keyup_L', function (event) {
-      if (moveKeys['rotate_left'].isUp) {
-        player.setAngularVelocity(0);
-        player.setAngularAcceleration(0);
-      }
-    });
-    this.input.keyboard.on('keyup_R', function (event) {
-      if (moveKeys['rotate_left'].isUp){
-        player.setAngularVelocity(0);
-        player.setAngularAcceleration(0);
-      }
+        player.setVelocityX(0);
     });
 
     //colliders
@@ -231,7 +209,6 @@ var GameScene = new Phaser.Class({
 
   update: function(time, delta) {
     // Constrain velocity of player
-    this.constrainVelocity(player, 500);
 
     // update accuracy if applicable - update accuracy of last target location if applicable
     const iterations = this.metronomeTimer.repeat - this.metronomeTimer.repeatCount;
@@ -268,7 +245,6 @@ var GameScene = new Phaser.Class({
       this.backgrounds[i].update();
     }
 
-    console.log(time);
     let waveTime = 10000;
     if (this.waveCounter === 0 && time >= waveTime * this.waveCounter) {
       this.waveCounter += 1;
@@ -292,7 +268,13 @@ var GameScene = new Phaser.Class({
       this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
     } else if (this.waveCounter === 7 && time >= waveTime * this.waveCounter) {
       this.waveCounter += 2;
-      this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
+      this.enemyEvents.burstEnemyLine(this, 1600, 2000, this.enemies);
+    } else if (this.waveCounter === 8 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 2;
+      this.enemyEvents.burstEnemyLine(this, 0, 2000, this.enemies);
+    } else if (this.waveCounter === 8 && time >= waveTime * this.waveCounter) {
+      this.waveCounter += 2;
+      this.enemyEvents.spiralEnemyLine(this, 400, 500, this.enemies);
     }
 
     this.healthBar.clear();
