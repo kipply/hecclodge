@@ -188,6 +188,14 @@ var GameScene = new Phaser.Class({
         bullet.destroy();
       }
     });
+
+    this.physics.add.collider(player, this.enemyBullets, function(player, enemyBullet) {
+      if (enemyBullet) {
+        if (playerHealth > 10) {
+          playerHealth -= 10;
+        }
+      }
+    });
     this.waveCounter = 0;
   },
 
