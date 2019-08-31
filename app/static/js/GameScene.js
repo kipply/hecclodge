@@ -182,9 +182,10 @@ var GameScene = new Phaser.Class({
       }
     });
 
-    this.physics.add.collider(player, this.enemyBullets, function(player, enemyBullet) {
+    this.physics.add.collider(player, this.enemyBullets, (player, enemyBullet) => {
       if (enemyBullet) {
         playerHealth = Math.max(0, playerHealth - 2);
+        if (!playerHealth) this.killPlayer();;
       }
     });
     this.waveCounter = 0;
@@ -221,6 +222,9 @@ var GameScene = new Phaser.Class({
   },
 
   update: function(time, delta) {
+    if (this.song.seek === 0) {
+      this.killPlayer();
+    }
     // Constrain velocity of player
     this.constrainVelocity(player, 500);
 
@@ -262,10 +266,10 @@ var GameScene = new Phaser.Class({
     let waveTime = 10000;
     let rand = Math.random() * 10000;
 
-    if (rand < 9990) {
-    } else if (rand < 9993) {
+    if (rand < 9980) {
+    } else if (rand < 9990) {
       this.enemyEvents.burstEnemyLine(this, 800, 801, this.enemies);
-    } else if (rand < 9997) {
+    } else if (rand < 9995) {
       this.enemyEvents.noFireEnemyLine(this, 400, 401, this.enemies);
     } else {
       this.enemyEvents.spiralEnemyLine(this, 400, 401, this.enemies);
@@ -273,7 +277,6 @@ var GameScene = new Phaser.Class({
 
     if (time - this.lastBulletShot > 250 && this.player.active) {
       let angle = this.player.angle - 90;
-      console.log(angle)
       let velY = Math.sin(angle * Math.PI / 180) * 500;
       let velX = Math.sqrt(250000 - velY * velY);
       if (angle < -180) velX *= -1;
@@ -289,7 +292,7 @@ var GameScene = new Phaser.Class({
     } else {
       this.healthBar.fillStyle(0x00ff00, 1);
     }
-    this.healthBar.fillRect(windowHeight * 1.5 - 80, -windowHeight/2 + 50, windowWidth/300 * playerHealth, 50)
+    this.healthBar.fillRect(windowHeight * 1.5 - 80, -windowHeight/2 + 50, windowWidth/300 * playerHealth, 50);
   },
 
   updateMetronome: function() {
@@ -330,5 +333,10 @@ var GameScene = new Phaser.Class({
     metronomeTicker.clear();
     metronomeTicker.lineStyle(5, 0xFFFFFF, 1);
     metronomeTicker.strokeRect(windowHeight/3 + progress*windowWidth/2, -windowHeight/2 + 50, 5, 75);
+  },
+
+  killPlayer: function() {
+    game.scene.remove('gameScene');
+    game.scene.add('endGameScene', EndGameScene, true);
   }
 });
