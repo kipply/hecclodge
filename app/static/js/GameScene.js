@@ -71,7 +71,7 @@ var GameScene = new Phaser.Class({
 
     // Add background, player sprites, and bullets
     player = this.physics.add.sprite(windowWidth/2, windowHeight/2, 'player');
-    player = player;
+    this.player = player;
     player.setBounce(false);
     player.setImmovable(true);
 
@@ -93,6 +93,7 @@ var GameScene = new Phaser.Class({
     this.metronomeSound = this.sound.add('metronome');
     this.metronomeTimer = this.time.addEvent({ delay: beatLength * 1000, callback: this.updateMetronome, callbackScope: this, repeat: 1 << 30 });
     this.targetLocation = getRandomPoint();
+    this.lastBulletShot = -1;
 
     // set up health bar
     var healthBarBack = this.add.graphics();
@@ -141,14 +142,6 @@ var GameScene = new Phaser.Class({
     this.input.keyboard.on('keydown_R', function (event) {
       player.setAngularAcceleration(-400);
     });
-    this.input.keyboard.on('keydown_SPACE', function (event) {
-      if (player.active === false)
-        return;
-
-      let bullet = new PlayerBullet(this.scene, player.x, player.y, 0, -500);
-      playerBullets.add(bullet);
-    });
-
 
     // Stops player acceleration on uppress of WASD keys
     this.input.keyboard.on('keyup_W', function (event) {
@@ -191,9 +184,7 @@ var GameScene = new Phaser.Class({
 
     this.physics.add.collider(player, this.enemyBullets, function(player, enemyBullet) {
       if (enemyBullet) {
-        if (playerHealth > 10) {
-          playerHealth -= 10;
-        }
+        playerHealth = Math.max(0, playerHealth - 2);
       }
     });
     this.waveCounter = 0;
@@ -268,31 +259,28 @@ var GameScene = new Phaser.Class({
       this.backgrounds[i].update();
     }
 
-    console.log(time);
     let waveTime = 10000;
-    if (this.waveCounter === 0 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
-    } else if (this.waveCounter === 1 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
-      this.enemyEvents.noFireEnemyLine(this, 800, 801, this.enemies);
-    } else if (this.waveCounter === 2 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
+    let rand = Math.random() * 10000;
+
+    if (rand < 9990) {
+    } else if (rand < 9993) {
+      this.enemyEvents.burstEnemyLine(this, 800, 801, this.enemies);
+    } else if (rand < 9997) {
       this.enemyEvents.noFireEnemyLine(this, 400, 401, this.enemies);
-    } else if (this.waveCounter === 3 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
-      this.enemyEvents.noFireEnemyLine(this, 600, 601, this.enemies);
-    } else if (this.waveCounter === 4 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
-      this.enemyEvents.noFireEnemyLine(this, 200, 300, this.enemies);
-    } else if (this.waveCounter === 5 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 1;
-      this.enemyEvents.noFireEnemyLine(this, 700, 800, this.enemies);
-    } else if (this.waveCounter === 6 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 2; //waveCounter is a clock for the waves
-      this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
-    } else if (this.waveCounter === 7 && time >= waveTime * this.waveCounter) {
-      this.waveCounter += 2;
-      this.enemyEvents.burstEnemyLine(this, 0, 400, this.enemies);
+    } else {
+      this.enemyEvents.spiralEnemyLine(this, 400, 401, this.enemies);
+    }
+
+    if (time - this.lastBulletShot > 250 && this.player.active) {
+      let angle = this.player.angle - 90;
+      console.log(angle)
+      let velY = Math.sin(angle * Math.PI / 180) * 500;
+      let velX = Math.sqrt(250000 - velY * velY);
+      if (angle < -180) velX *= -1;
+      if (angle < -90 && angle > -180) velX *= -1;
+      let bullet = new PlayerBullet(this, this.player.x, this.player.y, velX, velY);
+      this.playerBullets.add(bullet);
+      this.lastBulletShot = time;
     }
 
     this.healthBar.clear();

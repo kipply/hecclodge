@@ -10,6 +10,7 @@ class Entity extends Phaser.GameObjects.Sprite {
 
   explode(canDestroy) {
     if (!this.getData("isDead")) {
+      playerHealth = Math.min(100, playerHealth + 5);
       // Set the texture to the explosion image, then play the animation
       this.setTexture("sprExplosion");  // this refers to the same animation key we used when we added this.anims.create previously
       this.play("sprExplosion"); // play the animation
@@ -167,6 +168,7 @@ class EnemyBullet extends Entity {
     super(scene, x, y, "enemy_bullet");
     this.body.velocity.x = velX;
     this.body.velocity.y = velY;
+    this.body.setImmovable(true);
   }
 }
 
@@ -176,6 +178,7 @@ class PlayerBullet extends Entity {
     super(scene, x, y, "bullet");
     this.body.velocity.x = velX;
     this.body.velocity.y = velY;
+    this.body.setImmovable(true);
   }
 }
 

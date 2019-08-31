@@ -4,5 +4,5 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    beats = get_beats('test.mp3')
-    return render_template('index.html', beat_length=beats)
+    # beats = get_beats('test.mp3')
+    return render_template('index.html')
