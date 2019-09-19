@@ -1,3 +1,6 @@
+# Bullet Lodge
+Bare bones bullet-hell game with a rhythm element. Hit the red circles on the beat to score big accuracy points! Built with Phaser3. 
+
 # Execution
 
 Install Flask (`1.1.1`)
